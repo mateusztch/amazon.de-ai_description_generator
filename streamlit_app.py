@@ -77,5 +77,3 @@ if st.button("Generuj Opis"):
             if description:
                 st.markdown("### Opis Produktu (Niemiecki)")
                 st.markdown(f"- {description.replace('\n', '\n- ')}")
-
-
