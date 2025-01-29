@@ -1,8 +1,7 @@
-import json
 import streamlit as st
 import openai
 from openai.error import OpenAIError
-from langchain import OpenAI
+from langchain.llms import OpenAI as LangChainOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
@@ -18,21 +17,26 @@ if not st.session_state['authorized']:
     login_button = st.button("Zaloguj się")
 
     if login_button:
-        if password == st.secrets["bot_secrets"]["password"]:
-            st.session_state['authorized'] = True
-            st.success("Hasło poprawne!")
-            st.experimental_rerun()
-        else:
-            st.error("Błędne hasło. Spróbuj ponownie.")
-            st.stop()
-    else:
-        st.stop()
+        try:
+            if password == st.secrets["bot_secrets"]["password"]:
+                st.session_state['authorized'] = True
+                st.success("Hasło poprawne!")
+                st.experimental_rerun()
+            else:
+                st.error("Błędne hasło. Spróbuj ponownie.")
+        except KeyError:
+            st.error("Brak skonfigurowanego hasła w sekretach.")
+    st.stop()
 
 # Ustawienia API OpenAI
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+try:
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
+except KeyError:
+    st.error("Brak klucza API OpenAI w sekretach.")
+    st.stop()
 
 # Konfiguracja LangChain
-llm = OpenAI(model_name="gpt-4o-mini", temperature=0.7)
+llm = LangChainOpenAI(model_name="gpt-4", temperature=0.7)
 
 prompt_template = """
 Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów):
@@ -87,4 +91,5 @@ if st.button("Generuj Opis"):
                 formatted_bullets = '\n'.join([f"- {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 st.markdown("### Opis Produktu (Niemiecki)")
                 st.markdown(formatted_bullets)
+
 
