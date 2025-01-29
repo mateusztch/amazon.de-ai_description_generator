@@ -36,16 +36,19 @@ def generate_description(user_input):
     )
     try:
         response = openai.Completion.create(
-            model="gpt-4",  # Użycie modelu GPT-4
+            model="gpt-4",
             prompt=prompt,
-            max_tokens=300,  # Zwiększenie limitu tokenów dla czterech punktów
-            temperature=0.7,  # Temperatura dla bardziej kreatywnych odpowiedzi
+            max_tokens=300,
+            temperature=0.7,
             n=1,
             stop=None
         )
         return response.choices[0].text.strip()
     except OpenAIError as e:
         st.error(f"Wystąpił błąd podczas generowania opisu: {e}")
+        return ""
+    except Exception as e:
+        st.error(f"Nieoczekiwany błąd: {e}")
         return ""
 
 # Interfejs użytkownika
