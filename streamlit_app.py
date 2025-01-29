@@ -36,7 +36,7 @@ def generate_description(user_input):
     )
     try:
         response = openai.Completion.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             prompt=prompt,
             max_tokens=300,
             temperature=0.7,
