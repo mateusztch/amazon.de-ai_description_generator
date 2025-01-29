@@ -1,0 +1,4 @@
+numpy
+streamlit
+openai
+scikit-learn
