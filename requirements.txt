@@ -1,5 +1,5 @@
-streamlit
-openai
-langchain
-pillow
-whee
+streamlit==1.41.1
+openai==1.60.2
+langchain==0.3.16
+pillow==11.1.0
+wheel==0.38.4
