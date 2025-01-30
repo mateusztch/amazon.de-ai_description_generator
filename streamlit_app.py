@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from openai import OpenAIError, RateLimitError
 from langchain_openai import ChatOpenAI
+from langchain.embeddings import OpenAIEmbeddings  # Dodany import
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
@@ -37,7 +38,10 @@ except KeyError:
     st.stop()
 
 # Konfiguracja LangChain z ChatOpenAI
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7, openai_api_key=openai_api_key)
+llm = ChatOpenAI(model="gpt-4", temperature=0.7, openai_api_key=openai_api_key)  # Upewnij się, że model jest prawidłowy
+
+# Inicjalizacja embeddings
+embeddings_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
 
 prompt_template = """
 Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów):
@@ -86,9 +90,9 @@ embeddings, keywords = load_embeddings()
 # Funkcja generująca słowa kluczowe na podstawie opisu
 def generate_keywords(user_input, embeddings, keywords, top_n=5):
     try:
-        user_embedding = llm.embed(user_input)  
+        user_embedding = embeddings_model.embed_query(user_input)  # Użyj embed_query zamiast embed
     except AttributeError:
-        st.error("❌ Metoda embed nie jest dostępna w używanym modelu.")
+        st.error("❌ Metoda embed_query nie jest dostępna w używanym modelu.")
         return []
     
     # Oblicz podobieństwo kosinusowe
@@ -144,3 +148,4 @@ if st.button("🚀 Generuj Opis"):
                 if keywords:
                     st.markdown("### 🔑 Sugerowane Słowa Kluczowe")
                     st.markdown(", ".join(keywords))
+
