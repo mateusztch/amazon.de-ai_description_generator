@@ -1,33 +1,14 @@
 import streamlit as st
-import openai
+from openai import OpenAIError, RateLimitError
 
-
-
-from langchain_core.prompts import ChatPromptTemplate
-
-
-
+from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
-
-
-
-from langchain.chat_models import ChatOpenAI
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import PromptTemplate
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
 from langchain.text_splitter import CharacterTextSplitter
-
-from openai.error import RateLimitError
-
-
-
-
-
-
 
 # Konfiguracja strony
 st.set_page_config(page_title="Amazon.de - Generator Opisów", page_icon="🎉")
@@ -54,13 +35,13 @@ if not st.session_state['authorized']:
 
 # Ustawienia API OpenAI
 try:
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
+    openai_api_key = st.secrets["OPENAI_API_KEY"]
 except KeyError:
     st.error("Brak klucza API OpenAI w sekretach.")
     st.stop()
 
 # Konfiguracja LangChain z ChatOpenAI
-llm = ChatOpenAI(model_name="gpt-4", temperature=0.7)
+llm = ChatOpenAI(model_name="gpt-4", temperature=0.7, openai_api_key=openai_api_key)
 
 prompt_template = """
 Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów):
@@ -79,6 +60,9 @@ def generate_description(user_input):
     try:
         description = chain.run(user_input)
         return description.strip()
+    except RateLimitError:
+        st.error("Przekroczono limit zapytań do OpenAI. Spróbuj ponownie później.")
+        return ""
     except OpenAIError as e:
         st.error(f"Wystąpił błąd podczas generowania opisu: {e}")
         return ""
@@ -115,7 +99,6 @@ if st.button("Generuj Opis"):
                 formatted_bullets = '\n'.join([f"- {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 st.markdown("### Opis Produktu (Niemiecki)")
                 st.markdown(formatted_bullets)
-
 
 
 
