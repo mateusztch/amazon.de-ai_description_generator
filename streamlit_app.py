@@ -35,7 +35,7 @@ except KeyError:
     st.stop()
 
 # Konfiguracja LangChain z ChatOpenAI
-llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.7, openai_api_key=openai_api_key)
+llm = ChatOpenAI(model = "gpt-4o-mini", temperature=0.7, openai_api_key=openai_api_key)
 
 prompt_template = """
 Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów):
