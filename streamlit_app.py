@@ -2,7 +2,9 @@ import streamlit as st
 import openai
 
 
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
 
 
 from langchain.prompts import PromptTemplate
