@@ -3,3 +3,5 @@ openai==1.60.2
 langchain==0.3.16
 pillow==11.1.0
 wheel==0.38.4
+faiss-cpu
+tiktoken
