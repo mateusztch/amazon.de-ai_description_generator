@@ -91,7 +91,7 @@ if st.button("🚀 Generuj Opis"):
             if description:
                 # Formatowanie na cztery punkty
                 bullets = description.split("\n")
-                formatted_bullets = "\n".join([f"- {bullet.strip()}" for bullet in bullets if bullet.strip()])
+                formatted_bullets = "\n".join([f" {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 
                 st.markdown("### 📌 Opis Produktu (Niemiecki)")
                 #st.markdown(formatted_bullets)
