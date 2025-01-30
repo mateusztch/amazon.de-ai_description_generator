@@ -22,7 +22,7 @@ if not st.session_state['authorized']:
             if password == st.secrets["bot_secrets"]["password"]:
                 st.session_state['authorized'] = True
                 st.success("✅ Hasło poprawne!")
-                st.rerun()  # Poprawiona wersja zamiast st.experimental_rerun()
+                st.rerun() 
             else:
                 st.error("❌ Błędne hasło. Spróbuj ponownie.")
         except KeyError:
@@ -72,8 +72,7 @@ def generate_description(user_input):
 def load_embeddings():
     try:
         embeddings = np.load("rank_1_embeddings.npy")
-        # Zakładam, że masz plik 'keywords_list.npy' z listą słów kluczowych
-        keywords = np.load("keywords_list.npy")
+        keywords = np.load("keywords.npy")
         return embeddings, keywords
     except FileNotFoundError:
         st.error("⚠️ Plik z embeddingami lub słowami kluczowymi nie został znaleziony.")
@@ -83,8 +82,6 @@ embeddings, keywords = load_embeddings()
 
 # Funkcja generująca słowa kluczowe na podstawie opisu
 def generate_keywords(user_input, embeddings, keywords, top_n=5):
-    # Tutaj należy zaimplementować sposób przetwarzania user_input na embedding
-    # Zakładam, że używasz OpenAI do tego celu
     try:
         user_embedding = llm.embed(user_input)  # Upewnij się, że metoda embed istnieje
     except AttributeError:
@@ -132,7 +129,7 @@ if st.button("🚀 Generuj Opis"):
         with st.spinner("⏳ Generowanie opisu..."):
             description = generate_description(user_description)
             if description:
-                # Formatowanie na cztery punkty
+                # Formatowanie na cztery bullety
                 bullets = description.split("\n")
                 formatted_bullets = "\n".join([f"• {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 
