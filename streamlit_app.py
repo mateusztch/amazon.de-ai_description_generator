@@ -1,9 +1,7 @@
 import streamlit as st
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 from openai import OpenAIError, RateLimitError
 from langchain_openai import ChatOpenAI
-from langchain.embeddings import OpenAIEmbeddings  # Dodany import
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
@@ -40,26 +38,25 @@ except KeyError:
 # Konfiguracja LangChain z ChatOpenAI
 llm = ChatOpenAI(model="gpt-4", temperature=0.7, openai_api_key=openai_api_key)  # Upewnij się, że model jest prawidłowy
 
-# Inicjalizacja embeddings
-embeddings_model = OpenAIEmbeddings(openai_api_key=openai_api_key)
-
 prompt_template = """
-Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów):
+Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów). Użyj następujących słów kluczowych w opisie: {keywords}.
 
+Opis:
 {user_input}
 """
 
 prompt = PromptTemplate(
-    input_variables=["user_input"],
+    input_variables=["user_input", "keywords"],
     template=prompt_template
 )
 
 chain = LLMChain(llm=llm, prompt=prompt)
 
 # Funkcja generująca opis
-def generate_description(user_input):
+def generate_description(user_input, keywords):
     try:
-        description = chain.run(user_input)
+        # Przekazujemy zarówno user_input, jak i keywords do łańcucha
+        description = chain.run(user_input=user_input, keywords=", ".join(keywords))
         return description.strip()
     except RateLimitError:
         st.error("⏳ Przekroczono limit zapytań do OpenAI. Spróbuj ponownie później.")
@@ -71,47 +68,27 @@ def generate_description(user_input):
         st.error(f"⚠️ Nieoczekiwany błąd: {e}")
         return ""
 
-# Ładowanie embedingów i słów kluczowych
+# Ładowanie słów kluczowych
 @st.cache_resource
-def load_embeddings():
+def load_keywords():
     try:
-        embeddings = np.load("rank_1_embeddings.npy")
         keywords = np.load("keywords.npy", allow_pickle=True)
-        return embeddings, keywords
+        return keywords
     except FileNotFoundError:
-        st.error("⚠️ Plik z embeddingami lub słowami kluczowymi nie został znaleziony.")
+        st.error("⚠️ Plik ze słowami kluczowymi nie został znaleziony.")
         st.stop()
     except ValueError as ve:
         st.error(f"❌ Błąd podczas ładowania pliku Numpy: {ve}")
         st.stop()
 
-embeddings, keywords = load_embeddings()
-
-# Funkcja generująca słowa kluczowe na podstawie opisu
-def generate_keywords(user_input, embeddings, keywords, top_n=5):
-    try:
-        user_embedding = embeddings_model.embed_query(user_input)  # Użyj embed_query zamiast embed
-    except AttributeError:
-        st.error("❌ Metoda embed_query nie jest dostępna w używanym modelu.")
-        return []
-    
-    # Oblicz podobieństwo kosinusowe
-    similarities = cosine_similarity([user_embedding], embeddings)[0]
-    
-    # Znajdź indeksy top_n najbardziej podobnych
-    top_indices = similarities.argsort()[-top_n:][::-1]
-    
-    # Pobierz odpowiadające słowa kluczowe
-    suggested_keywords = [keywords[i] for i in top_indices]
-    
-    return suggested_keywords
+keywords = load_keywords()
 
 # Interfejs użytkownika
 st.title("📦 Generator Opisów Produktów na Amazon.de")
 
 st.markdown(
     """
-    ✍️ **Wprowadź opis swojego produktu w języku angielskim lub polskim**, a system przetworzy go na profesjonalny opis w języku niemieckim w formie **czterech punktów (bullet points)** oraz zasugeruje **słowa kluczowe**.
+    ✍️ **Wprowadź opis swojego produktu w języku angielskim lub polskim**, a system przetworzy go na profesjonalny opis w języku niemieckim w formie **czterech punktów (bullet points)** oraz wykorzysta **istniejące słowa kluczowe**.
     """
 )
 
@@ -128,13 +105,13 @@ user_description = st.text_area(
     placeholder="Napisz tutaj opis swojego produktu w języku angielskim lub polskim..."
 )
 
-# Generowanie opisu i słów kluczowych
+# Generowanie opisu i wyświetlanie słów kluczowych
 if st.button("🚀 Generuj Opis"):
     if not user_description.strip():
         st.error("⚠️ Proszę wprowadzić opis produktu przed wygenerowaniem.")
     else:
         with st.spinner("⏳ Generowanie opisu..."):
-            description = generate_description(user_description)
+            description = generate_description(user_description, keywords)
             if description:
                 # Formatowanie na cztery punkty
                 bullets = description.split("\n")
@@ -143,9 +120,8 @@ if st.button("🚀 Generuj Opis"):
                 st.markdown("### 📌 Opis Produktu (Niemiecki)")
                 st.code(formatted_bullets, language="markdown")
                 
-                # Generowanie słów kluczowych
-                keywords = generate_keywords(user_description, embeddings, keywords)
-                if keywords:
-                    st.markdown("### 🔑 Sugerowane Słowa Kluczowe")
-                    st.markdown(", ".join(keywords))
+                # Wyświetlanie istniejących słów kluczowych
+                st.markdown("### 🔑 Wykorzystane Słowa Kluczowe")
+                st.markdown(", ".join(keywords))
+
 
