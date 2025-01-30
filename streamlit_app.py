@@ -94,7 +94,7 @@ if st.button("🚀 Generuj Opis"):
                 formatted_bullets = "\n".join([f"- {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 
                 st.markdown("### 📌 Opis Produktu (Niemiecki)")
-                st.markdown(formatted_bullets)
+                #st.markdown(formatted_bullets)
 
                 # Dodanie przycisku do kopiowania opisu
                 st.code(formatted_bullets, language="markdown")
