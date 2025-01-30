@@ -22,7 +22,7 @@ if not st.session_state['authorized']:
             if password == st.secrets["bot_secrets"]["password"]:
                 st.session_state['authorized'] = True
                 st.success("✅ Hasło poprawne!")
-                st.rerun() 
+                st.experimental_rerun()  # Użyj st.experimental_rerun() jeśli st.rerun() nie działa
             else:
                 st.error("❌ Błędne hasło. Spróbuj ponownie.")
         except KeyError:
@@ -37,7 +37,7 @@ except KeyError:
     st.stop()
 
 # Konfiguracja LangChain z ChatOpenAI
-llm = ChatOpenAI(model = "gpt-4o-mini", temperature=0.7, openai_api_key=openai_api_key)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7, openai_api_key=openai_api_key)
 
 prompt_template = """
 Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów):
@@ -72,10 +72,13 @@ def generate_description(user_input):
 def load_embeddings():
     try:
         embeddings = np.load("rank_1_embeddings.npy")
-        keywords = np.load("keywords.npy")
+        keywords = np.load("keywords.npy", allow_pickle=True)
         return embeddings, keywords
     except FileNotFoundError:
         st.error("⚠️ Plik z embeddingami lub słowami kluczowymi nie został znaleziony.")
+        st.stop()
+    except ValueError as ve:
+        st.error(f"❌ Błąd podczas ładowania pliku Numpy: {ve}")
         st.stop()
 
 embeddings, keywords = load_embeddings()
@@ -83,7 +86,7 @@ embeddings, keywords = load_embeddings()
 # Funkcja generująca słowa kluczowe na podstawie opisu
 def generate_keywords(user_input, embeddings, keywords, top_n=5):
     try:
-        user_embedding = llm.embed(user_input)  # Upewnij się, że metoda embed istnieje
+        user_embedding = llm.embed(user_input)  
     except AttributeError:
         st.error("❌ Metoda embed nie jest dostępna w używanym modelu.")
         return []
@@ -129,7 +132,7 @@ if st.button("🚀 Generuj Opis"):
         with st.spinner("⏳ Generowanie opisu..."):
             description = generate_description(user_description)
             if description:
-                # Formatowanie na cztery bullety
+                # Formatowanie na cztery punkty
                 bullets = description.split("\n")
                 formatted_bullets = "\n".join([f"• {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 
