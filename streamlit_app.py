@@ -29,7 +29,7 @@ if not st.session_state['authorized']:
 
 # Ustawienia API OpenAI
 try:
-    openai_api_key = st.secrets["OPENAI_API_KEY"]
+    openai_api_key = st.secrets["OPENAI_API_KEY"]["OPENAI_API_KEY"]
 except KeyError:
     st.error("⚠️ Brak klucza API OpenAI w sekretach.")
     st.stop()
