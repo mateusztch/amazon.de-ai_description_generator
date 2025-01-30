@@ -6,3 +6,4 @@ wheel==0.38.4
 faiss-cpu
 tiktoken
 langchain-openai
+langchain-community
