@@ -1,6 +1,6 @@
 import streamlit as st
 import openai
-from langchain.llms.openai import OpenAI as LangChainOpenAI  # Zaktualizowany import
+from langchain.chat_models import ChatOpenAI  # Zaktualizowany import
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from openai.error import OpenAIError  # Upewnij się, że OpenAIError jest importowany
@@ -35,8 +35,8 @@ except KeyError:
     st.error("Brak klucza API OpenAI w sekretach.")
     st.stop()
 
-# Konfiguracja LangChain
-llm = LangChainOpenAI(model_name="gpt-4", temperature=0.7)
+# Konfiguracja LangChain z ChatOpenAI
+llm = ChatOpenAI(model_name="gpt-4", temperature=0.7)
 
 prompt_template = """
 Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów):
@@ -91,6 +91,7 @@ if st.button("Generuj Opis"):
                 formatted_bullets = '\n'.join([f"- {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 st.markdown("### Opis Produktu (Niemiecki)")
                 st.markdown(formatted_bullets)
+
 
 
 
