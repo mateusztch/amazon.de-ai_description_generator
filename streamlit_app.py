@@ -1,6 +1,6 @@
 import streamlit as st
 import openai
-from langchain_community.llms import OpenAI as LangChainOpenAI  # Zaktualizowany import
+from langchain.llms.openai import OpenAI as LangChainOpenAI  # Zaktualizowany import
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from openai.error import OpenAIError  # Upewnij się, że OpenAIError jest importowany
