@@ -11,7 +11,6 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
 
-from openai.types.error import OpenAIError  # Alternatywa dla nowszych wersji OpenAI
 
 
 from langchain.chat_models import ChatOpenAI
