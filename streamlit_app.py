@@ -2,7 +2,7 @@ import streamlit as st
 import openai
 
 
-from langchain_openai import ChatOpenAI  # Nowa struktura importu dla nowszych wersji
+from langchain.chat_models import ChatOpenAI
 
 
 from langchain.prompts import PromptTemplate
