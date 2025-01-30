@@ -5,13 +5,29 @@ import openai
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from langchain_openai.chat_models import ChatOpenAI
+
 
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
 
 from openai.types.error import OpenAIError  # Alternatywa dla nowszych wersji OpenAI
+
+
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import ConversationalRetrievalChain
+from langchain.prompts import PromptTemplate
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.memory import ConversationBufferMemory
+from langchain.text_splitter import CharacterTextSplitter
+
+from openai.error import RateLimitError
+
+
+
+
+
 
 
 # Konfiguracja strony
