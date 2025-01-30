@@ -22,6 +22,7 @@ if not st.session_state['authorized']:
             if password == st.secrets["bot_secrets"]["password"]:
                 st.session_state['authorized'] = True
                 st.success("✅ Hasło poprawne!")
+                st.rerun() 
             else:
                 st.error("❌ Błędne hasło. Spróbuj ponownie.")
         except KeyError:
