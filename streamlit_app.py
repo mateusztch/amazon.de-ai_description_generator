@@ -1,4 +1,6 @@
 import streamlit as st
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 from openai import OpenAIError, RateLimitError
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -65,12 +67,47 @@ def generate_description(user_input):
         st.error(f"⚠️ Nieoczekiwany błąd: {e}")
         return ""
 
+# Ładowanie embedingów i słów kluczowych
+@st.cache_resource
+def load_embeddings():
+    try:
+        embeddings = np.load("rank_1_embeddings.npy")
+        # Zakładam, że masz plik 'keywords_list.npy' z listą słów kluczowych
+        keywords = np.load("keywords_list.npy")
+        return embeddings, keywords
+    except FileNotFoundError:
+        st.error("⚠️ Plik z embeddingami lub słowami kluczowymi nie został znaleziony.")
+        st.stop()
+
+embeddings, keywords = load_embeddings()
+
+# Funkcja generująca słowa kluczowe na podstawie opisu
+def generate_keywords(user_input, embeddings, keywords, top_n=5):
+    # Tutaj należy zaimplementować sposób przetwarzania user_input na embedding
+    # Zakładam, że używasz OpenAI do tego celu
+    try:
+        user_embedding = llm.embed(user_input)  # Upewnij się, że metoda embed istnieje
+    except AttributeError:
+        st.error("❌ Metoda embed nie jest dostępna w używanym modelu.")
+        return []
+    
+    # Oblicz podobieństwo kosinusowe
+    similarities = cosine_similarity([user_embedding], embeddings)[0]
+    
+    # Znajdź indeksy top_n najbardziej podobnych
+    top_indices = similarities.argsort()[-top_n:][::-1]
+    
+    # Pobierz odpowiadające słowa kluczowe
+    suggested_keywords = [keywords[i] for i in top_indices]
+    
+    return suggested_keywords
+
 # Interfejs użytkownika
 st.title("📦 Generator Opisów Produktów na Amazon.de")
 
 st.markdown(
     """
-    ✍️ **Wprowadź opis swojego produktu w języku angielskim lub polskim**, a system przetworzy go na profesjonalny opis w języku niemieckim w formie **czterech punktów (bullet points).**
+    ✍️ **Wprowadź opis swojego produktu w języku angielskim lub polskim**, a system przetworzy go na profesjonalny opis w języku niemieckim w formie **czterech punktów (bullet points)** oraz zasugeruje **słowa kluczowe**.
     """
 )
 
@@ -81,7 +118,7 @@ user_description = st.text_area(
     placeholder="Napisz tutaj opis swojego produktu w języku angielskim lub polskim..."
 )
 
-# Generowanie opisu
+# Generowanie opisu i słów kluczowych
 if st.button("🚀 Generuj Opis"):
     if not user_description.strip():
         st.error("⚠️ Proszę wprowadzić opis produktu przed wygenerowaniem.")
@@ -91,13 +128,16 @@ if st.button("🚀 Generuj Opis"):
             if description:
                 # Formatowanie na cztery punkty
                 bullets = description.split("\n")
-                formatted_bullets = "\n".join([f" {bullet.strip()}" for bullet in bullets if bullet.strip()])
+                formatted_bullets = "\n".join([f"• {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 
                 st.markdown("### 📌 Opis Produktu (Niemiecki)")
-                #st.markdown(formatted_bullets)
-
-                # Dodanie przycisku do kopiowania opisu
                 st.code(formatted_bullets, language="markdown")
+                
+                # Generowanie słów kluczowych
+                keywords = generate_keywords(user_description, embeddings, keywords)
+                if keywords:
+                    st.markdown("### 🔑 Sugerowane Słowa Kluczowe")
+                    st.markdown(", ".join(keywords))
 
 
 
