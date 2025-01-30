@@ -1,8 +1,9 @@
 import streamlit as st
 import openai
-from langchain import OpenAI as LangChainOpenAI
+from langchain_community.llms import OpenAI as LangChainOpenAI  # Zaktualizowany import
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
+from openai.error import OpenAIError  # Upewnij się, że OpenAIError jest importowany
 
 # Konfiguracja strony
 st.set_page_config(page_title="Amazon.de - Generator Opisów", page_icon="🎉")
@@ -90,5 +91,6 @@ if st.button("Generuj Opis"):
                 formatted_bullets = '\n'.join([f"- {bullet.strip()}" for bullet in bullets if bullet.strip()])
                 st.markdown("### Opis Produktu (Niemiecki)")
                 st.markdown(formatted_bullets)
+
 
 
