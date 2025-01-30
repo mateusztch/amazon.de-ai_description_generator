@@ -111,6 +111,14 @@ st.markdown(
     """
 )
 
+# Dodanie rozwijanej listy z kategorią
+category = st.selectbox(
+    "📂 Wybierz kategorię:",
+    options=["Meble - Kuchnia, Gospodarstwo Domowe i Mieszkanie"]  # Tylko jedna opcja na raz
+)
+
+st.write(f"**Wybrana kategoria:** {category}")
+
 # Pole tekstowe dla użytkownika
 user_description = st.text_area(
     "📝 Wprowadź opis produktu:",
@@ -138,6 +146,7 @@ if st.button("🚀 Generuj Opis"):
                 if keywords:
                     st.markdown("### 🔑 Sugerowane Słowa Kluczowe")
                     st.markdown(", ".join(keywords))
+
 
 
 
