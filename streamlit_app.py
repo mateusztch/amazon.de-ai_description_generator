@@ -1,9 +1,16 @@
 import streamlit as st
 import openai
-from langchain.chat_models import ChatOpenAI  # Zaktualizowany import
+
+
+from langchain_openai import ChatOpenAI  # Nowa struktura importu dla nowszych wersji
+
+
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from openai.error import OpenAIError  # Upewnij się, że OpenAIError jest importowany
+
+
+from openai.types.error import OpenAIError  # Alternatywa dla nowszych wersji OpenAI
+
 
 # Konfiguracja strony
 st.set_page_config(page_title="Amazon.de - Generator Opisów", page_icon="🎉")
