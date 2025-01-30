@@ -1,6 +1,5 @@
 import streamlit as st
 import openai
-from openai.error import OpenAIError
 from langchain import OpenAI as LangChainOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
