@@ -55,7 +55,6 @@ chain = LLMChain(llm=llm, prompt=prompt)
 # Funkcja generująca opis
 def generate_description(user_input, keywords):
     try:
-        # Przekazujemy zarówno user_input, jak i keywords do łańcucha
         description = chain.run(user_input=user_input, keywords=", ".join(keywords))
         return description.strip()
     except RateLimitError:
@@ -92,7 +91,7 @@ st.markdown(
     """
 )
 
-# Dodanie rozwijanej listy kategorii pod instrukcją
+# Rozwijana lista kategorii
 category = st.selectbox(
     "📂 Wybierz kategorię:",
     ["Meble - Kuchnia, Dom i Mieszkanie"]
