@@ -39,7 +39,7 @@ except KeyError:
 llm = ChatOpenAI(model="gpt-4", temperature=0.7, openai_api_key=openai_api_key)  # Upewnij się, że model jest prawidłowy
 
 prompt_template = """
-Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów). Użyj następujących słów kluczowych w opisie: {keywords}.
+Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie czterech punktów (bulletów). Użyj następujących słów kluczowych w opisie: {keywords}. Użyj od 1200 do 1300 słów.
 
 Opis:
 {user_input}
@@ -88,7 +88,7 @@ st.title("📦 Generator Opisów Produktów na Amazon.de")
 
 st.markdown(
     """
-    ✍️ **Wprowadź opis swojego produktu w języku angielskim lub polskim**, a system przetworzy go na profesjonalny opis w języku niemieckim w formie **czterech punktów (bullet points)** oraz wykorzysta **istniejące słowa kluczowe**.
+    ✍️ **Wprowadź opis swojego produktu w języku angielskim lub polskim**, a system przetworzy go na profesjonalny opis w języku niemieckim w formie **pięciu punktów (bullet points)** oraz wykorzysta **istniejące słowa kluczowe**.
     """
 )
 
