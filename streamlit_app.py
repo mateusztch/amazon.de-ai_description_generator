@@ -39,7 +39,7 @@ except KeyError:
 llm = ChatOpenAI(model="gpt-4", temperature=0.7, openai_api_key=openai_api_key)  
 
 prompt_template = """
-Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie pięciu punktów (bulletów). Użyj następujących słów kluczowych w opisie: {keywords}. Użyj od 1200 do 1300 słów.
+Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie pięciu punktów (bulletów). Użyj następujących słów kluczowych w opisie: {keywords}. Użyj od 400 do 500 lub od 1200 do 1300 słów.
 
 Opis:
 {user_input}
