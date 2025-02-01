@@ -36,26 +36,40 @@ except KeyError:
     st.stop()
 
 # Konfiguracja LangChain z ChatOpenAI
-llm = ChatOpenAI(model="gpt-4", temperature=0.7, openai_api_key=openai_api_key)  
+llm = ChatOpenAI(model="gpt-4", temperature=0.7, openai_api_key=openai_api_key)
 
+# Modyfikowany prompt – dodajemy zmienną {rank_embeddings}
 prompt_template = """
-Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie pięciu punktów (bulletów). Użyj następujących słów kluczowych w opisie: {keywords}. Użyj od 1200 do 1300 słów.
+Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie pięciu punktów (bulletów).
+Użyj następujących słów kluczowych w opisie: {keywords}.
+Dodatkowo, weź pod uwagę następujący kontekst embeddingów opisów z najlepszego rankingu: {rank_embeddings}.
+Użyj od 1200 do 1300 słów.
 
 Opis:
 {user_input}
 """
 
+# Rozszerzamy input_variables o "rank_embeddings"
 prompt = PromptTemplate(
-    input_variables=["user_input", "keywords"],
+    input_variables=["user_input", "keywords", "rank_embeddings"],
     template=prompt_template
 )
 
 chain = LLMChain(llm=llm, prompt=prompt)
 
-# Funkcja generująca opis
-def generate_description(user_input, keywords):
+# Funkcja generująca opis – przekazujemy również embeddingi
+def generate_description(user_input, keywords, rank_embeddings):
     try:
-        description = chain.run(user_input=user_input, keywords=", ".join(keywords))
+        # Konwertujemy embeddingi do formy czytelnego stringa (można to modyfikować, np. wybierając tylko kilka wartości)
+        if hasattr(rank_embeddings, "tolist"):
+            rank_emb_str = str(rank_embeddings.tolist())
+        else:
+            rank_emb_str = str(rank_embeddings)
+        description = chain.run(
+            user_input=user_input, 
+            keywords=", ".join(keywords),
+            rank_embeddings=rank_emb_str
+        )
         return description.strip()
     except RateLimitError:
         st.error("⏳ Przekroczono limit zapytań do OpenAI. Spróbuj ponownie później.")
@@ -82,12 +96,27 @@ def load_keywords():
 
 keywords = load_keywords()
 
+# Ładowanie embeddingów (rank_1_embeddings)
+@st.cache_resource
+def load_rank_embeddings():
+    try:
+        embeddings = np.load("rank_1_embeddings.npy", allow_pickle=True)
+        return embeddings
+    except FileNotFoundError:
+        st.error("⚠️ Plik z embeddingami nie został znaleziony.")
+        st.stop()
+    except ValueError as ve:
+        st.error(f"❌ Błąd podczas ładowania pliku Numpy: {ve}")
+        st.stop()
+
+rank_embeddings = load_rank_embeddings()
+
 # Interfejs użytkownika
 st.title("📦 Generator Opisów Produktów na Amazon.de")
 
 st.markdown(
     """
-    ✍️ **Wprowadź opis swojego produktu w języku angielskim lub polskim**, a system przetworzy go na profesjonalny opis w języku niemieckim w formie **pięciu punktów (bullet points)** oraz wykorzysta **istniejące słowa kluczowe**.
+    ✍️ **Wprowadź opis swojego produktu w języku angielskim lub polskim**, a system przetworzy go na profesjonalny opis w języku niemieckim w formie **pięciu punktów (bullet points)** oraz wykorzysta **istniejące słowa kluczowe** i **embeddingi najlepszych opisów**.
     """
 )
 
@@ -104,20 +133,20 @@ user_description = st.text_area(
     placeholder="Napisz tutaj opis swojego produktu w języku angielskim lub polskim..."
 )
 
-# Generowanie opisu i wyświetlanie słów kluczowych
+# Generowanie opisu i wyświetlanie słów kluczowych oraz embeddingów
 if st.button("🚀 Generuj Opis"):
     if not user_description.strip():
         st.error("⚠️ Proszę wprowadzić opis produktu przed wygenerowaniem.")
     else:
         with st.spinner("⏳ Generowanie opisu..."):
-            description = generate_description(user_description, keywords)
+            description = generate_description(user_description, keywords, rank_embeddings)
             if description:
-                # Formatowanie na cztery punkty
+                # Formatowanie – zakładamy, że punkty oddzielone są nowymi liniami
                 bullets = description.split("\n")
-                formatted_bullets = "\n".join([f"{bullet.strip()}" for bullet in bullets if bullet.strip()])
+                formatted_bullets = "\n".join([bullet.strip() for bullet in bullets if bullet.strip()])
                 
                 st.markdown("### 📌 Opis Produktu")
                 st.code(formatted_bullets, language="markdown")
-                
+
 
 
