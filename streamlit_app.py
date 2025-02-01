@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import time  # potrzebne do sleep
 from openai import OpenAIError, RateLimitError
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -38,7 +39,7 @@ except KeyError:
 # Konfiguracja LangChain z ChatOpenAI
 llm = ChatOpenAI(model="gpt-4", temperature=0.7, openai_api_key=openai_api_key)
 
-# Modyfikowany prompt – dodajemy zmienną {rank_embeddings}
+# Zmodyfikowany prompt – dodajemy zmienną {rank_embeddings}
 prompt_template = """
 Przetłumacz poniższy opis produktu z języka angielskiego lub polskiego na profesjonalny opis w języku niemieckim w formie pięciu punktów (bulletów).
 Użyj następujących słów kluczowych w opisie: {keywords}.
@@ -57,29 +58,47 @@ prompt = PromptTemplate(
 
 chain = LLMChain(llm=llm, prompt=prompt)
 
-# Funkcja generująca opis – przekazujemy również embeddingi
-def generate_description(user_input, keywords, rank_embeddings):
+def summarize_embeddings(embeddings, num=5):
+    """
+    Funkcja wybiera pierwsze num embeddingów i zwraca ich reprezentację jako string.
+    Dzięki temu prompt nie będzie zawierał całego (prawdopodobnie bardzo dużego) zbioru embeddingów.
+    """
     try:
-        # Konwertujemy embeddingi do formy czytelnego stringa (można to modyfikować, np. wybierając tylko kilka wartości)
-        if hasattr(rank_embeddings, "tolist"):
-            rank_emb_str = str(rank_embeddings.tolist())
-        else:
-            rank_emb_str = str(rank_embeddings)
-        description = chain.run(
-            user_input=user_input, 
-            keywords=", ".join(keywords),
-            rank_embeddings=rank_emb_str
-        )
-        return description.strip()
-    except RateLimitError:
-        st.error("⏳ Przekroczono limit zapytań do OpenAI. Spróbuj ponownie później.")
-        return ""
-    except OpenAIError as e:
-        st.error(f"❌ Wystąpił błąd podczas generowania opisu: {e}")
-        return ""
+        # Jeśli embeddings jest tablicą numpy, wybieramy pierwsze num wierszy
+        summarized = embeddings[:num]
+        return str(summarized.tolist())
     except Exception as e:
-        st.error(f"⚠️ Nieoczekiwany błąd: {e}")
-        return ""
+        st.error(f"⚠️ Błąd podczas przetwarzania embeddingów: {e}")
+        return "Brak danych embeddingów"
+
+# Funkcja generująca opis z mechanizmem retry dla RateLimitError
+def generate_description(user_input, keywords, rank_embeddings):
+    # Używamy skróconej wersji embeddingów
+    rank_emb_str = summarize_embeddings(rank_embeddings)
+    
+    max_retries = 3
+    retry_delay = 1  # początkowe opóźnienie w sekundach
+
+    for attempt in range(max_retries):
+        try:
+            description = chain.run(
+                user_input=user_input, 
+                keywords=", ".join(keywords),
+                rank_embeddings=rank_emb_str
+            )
+            return description.strip()
+        except RateLimitError:
+            st.error("⏳ Przekroczono limit zapytań do OpenAI. Próba ponownego połączenia...")
+            time.sleep(retry_delay)
+            retry_delay *= 2  # exponential backoff
+        except OpenAIError as e:
+            st.error(f"❌ Wystąpił błąd podczas generowania opisu: {e}")
+            return ""
+        except Exception as e:
+            st.error(f"⚠️ Nieoczekiwany błąd: {e}")
+            return ""
+    st.error("⏳ Przekroczono limit zapytań do OpenAI po kilku próbach. Spróbuj ponownie później.")
+    return ""
 
 # Ładowanie słów kluczowych
 @st.cache_resource
@@ -133,7 +152,7 @@ user_description = st.text_area(
     placeholder="Napisz tutaj opis swojego produktu w języku angielskim lub polskim..."
 )
 
-# Generowanie opisu i wyświetlanie słów kluczowych oraz embeddingów
+# Generowanie opisu i wyświetlanie
 if st.button("🚀 Generuj Opis"):
     if not user_description.strip():
         st.error("⚠️ Proszę wprowadzić opis produktu przed wygenerowaniem.")
